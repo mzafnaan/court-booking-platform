@@ -1,4 +1,4 @@
-# PORT
+# Courta
 
 > A modern Sports Center Management System built as a portfolio project.
 
