@@ -2,17 +2,17 @@
 
 # Domain Model
 
-This document defines the business domains, entities, responsibilities, and relationships of the Sports Center Management System.
+This document defines the business domains, responsibilities, entities, and relationships of **Courta**, a Sports Center Management System designed for a **single sports center**.
 
 Its purpose is to establish a clear business architecture before designing the database and implementing the application.
 
-This document is the bridge between `BUSINESS_RULES.md` and `DATABASE.md`.
+This document serves as the bridge between `BUSINESS_RULES.md` and `DATABASE.md`.
 
 ---
 
 # Domain Overview
 
-The application consists of six main domains.
+The application consists of six primary business domains.
 
 ```text
 Authentication
@@ -28,16 +28,16 @@ Booking Management
 Court Management
 │
 ├── Court
-├── Court Image
-├── Operating Hour
+├── Sport
 └── Holiday
 │
-Content Management
+Business Management
 │
+├── Business Profile
+├── Operating Hours
+├── Facilities
 ├── Gallery
-├── Facility
-├── FAQ
-└── Settings
+└── Promotion
 │
 User Management
 │
@@ -49,7 +49,7 @@ Reporting
 
 Each domain has a single responsibility.
 
-Domains should communicate through well-defined relationships.
+Domains should communicate through clearly defined relationships.
 
 Avoid mixing responsibilities across domains.
 
@@ -79,6 +79,7 @@ Authentication should never contain booking or business logic.
 * Email Verification
 * Password Reset
 * Session Authentication
+* Role-based Authorization
 
 ---
 
@@ -107,9 +108,9 @@ High
 
 ## Purpose
 
-Responsible for managing the entire booking lifecycle.
+Responsible for managing the complete booking lifecycle.
 
-This is the core domain of the application.
+This is the core business domain of the application.
 
 ---
 
@@ -128,17 +129,19 @@ This is the core domain of the application.
 Responsible for:
 
 * Creating bookings
-* Preventing double booking
-* Calculating booking price
-* Tracking booking status
+* Preventing overlapping bookings
+* Calculating booking prices
 * Reserving court schedules
-* Managing booking source
+* Tracking booking status
+* Handling booking expiration
+* Applying promotional pricing
+* Storing transaction snapshots
 
 Should NOT:
 
 * Authenticate users
-* Store gallery information
 * Manage court information
+* Manage business information
 
 ---
 
@@ -148,15 +151,15 @@ Responsible for:
 
 * Uploading payment proof
 * Storing payment information
-* Payment verification
+* Verifying payments
 * Tracking payment status
 * Recording payment amount
 
 Should NOT:
 
-* Store booking schedule
-* Manage customer profile
-* Calculate booking availability
+* Store booking schedules
+* Manage customer profiles
+* Calculate court availability
 
 ---
 
@@ -165,14 +168,14 @@ Should NOT:
 Responsible for:
 
 * Managing pricing rules
-* Defining hourly price ranges
-* Supporting different prices throughout the day
-* Providing price calculation data
+* Supporting different prices based on day and operating hours
+* Providing pricing calculations
+* Serving as the base price for promotions
 
 Should NOT:
 
 * Store booking history
-* Store payment data
+* Store payment information
 
 ---
 
@@ -182,6 +185,7 @@ Requires:
 
 * Authentication Domain
 * Court Management Domain
+* Business Management Domain
 
 ---
 
@@ -195,15 +199,14 @@ Highest
 
 ## Purpose
 
-Responsible for managing sports courts and operational information.
+Responsible for managing sports courts and their operational availability.
 
 ---
 
 ## Entities
 
 * Court
-* Court Image
-* Operating Hour
+* Sport
 * Holiday
 
 ---
@@ -212,33 +215,36 @@ Responsible for managing sports courts and operational information.
 
 ### Court
 
-* Store court information
-* Store court description
-* Store court status
-* Store capacity
-* Store court type
+Responsible for:
+
+* Storing court information
+* Storing court descriptions
+* Managing court status
+* Linking courts to supported sports
 
 ---
 
-### Court Image
+### Sport
 
-* Store court gallery
-* Manage multiple images for each court
+Responsible for:
 
----
+* Managing supported sports
+* Categorizing courts
 
-### Operating Hour
+Current supported sports:
 
-* Store opening hours
-* Store closing hours
-* Define booking slot duration
+* Futsal
+* Volleyball
 
 ---
 
 ### Holiday
 
-* Store closed dates
-* Prevent booking on holidays
+Responsible for:
+
+* Defining unavailable dates
+* Preventing bookings during holidays
+* Supporting public holidays and special closures
 
 ---
 
@@ -247,6 +253,115 @@ Responsible for managing sports courts and operational information.
 * Booking
 * Payment
 * Authentication
+* Landing Page Content
+
+---
+
+## Dependencies
+
+Business Management Domain
+
+---
+
+## Implementation Priority
+
+High
+
+---
+
+# Business Management
+
+## Purpose
+
+Responsible for managing all business-related information of the sports center.
+
+This domain represents the operational profile of a single sports center.
+
+---
+
+## Entities
+
+* Business Profile
+* Operating Hours
+* Facilities
+* Gallery
+* Promotion
+
+---
+
+## Responsibilities
+
+### Business Profile
+
+Stores information such as:
+
+* Sports Center Name
+* Description
+* Address
+* Phone Number
+* WhatsApp
+* Email
+* Google Maps
+* Logo
+* Social Media
+* Hero Banner
+
+---
+
+### Operating Hours
+
+Responsible for:
+
+* Opening hours
+* Closing hours
+* Daily operating schedule
+
+---
+
+### Facilities
+
+Responsible for:
+
+* Managing available facilities
+* Displaying facilities on the website
+
+Examples:
+
+* Parking Area
+* Toilet
+* Prayer Room
+* Wi-Fi
+* Cafeteria
+* Changing Room
+
+---
+
+### Gallery
+
+Responsible for:
+
+* Managing sports center photos
+* Displaying gallery images
+* Managing event documentation
+
+---
+
+### Promotion
+
+Responsible for:
+
+* Managing promotional campaigns
+* Defining promotional periods
+* Managing discount rules
+* Displaying promotions on the landing page
+
+---
+
+## Should NOT Handle
+
+* Booking
+* Authentication
+* User Profiles
 
 ---
 
@@ -262,74 +377,11 @@ High
 
 ---
 
-# Content Management
-
-## Purpose
-
-Responsible for managing all landing page content.
-
-The landing page should not contain hardcoded business content.
-
-All content should be manageable through the admin dashboard.
-
----
-
-## Entities
-
-* Gallery
-* Facility
-* FAQ
-* Settings
-
----
-
-## Responsibilities
-
-Gallery
-
-* Store landing page images
-
-Facility
-
-* Store available facilities
-
-FAQ
-
-* Store frequently asked questions
-
-Settings
-
-* Store business information
-
-Examples:
-
-* Sport Center Name
-* Address
-* Phone Number
-* WhatsApp
-* Email
-* Social Media
-* Hero Banner
-
----
-
-## Dependencies
-
-None.
-
----
-
-## Implementation Priority
-
-Medium
-
----
-
 # User Management
 
 ## Purpose
 
-Responsible for customer information beyond authentication.
+Responsible for managing user information beyond authentication.
 
 ---
 
@@ -342,9 +394,9 @@ Responsible for customer information beyond authentication.
 
 ## Responsibilities
 
-* Manage customer profile
-* Update personal information
-* View booking history
+* Managing customer profiles
+* Updating personal information
+* Viewing booking history
 
 ---
 
@@ -372,11 +424,11 @@ Medium
 
 ## Purpose
 
-Responsible for generating business reports.
+Responsible for generating business reports and analytics.
 
-Reporting should never own data.
+Reporting never owns data.
 
-It only aggregates data from other domains.
+It aggregates information from other domains.
 
 ---
 
@@ -390,6 +442,7 @@ Uses data from:
 * Payment
 * Court
 * User
+* Promotion
 
 ---
 
@@ -401,8 +454,10 @@ Generate reports such as:
 * Booking Trends
 * Revenue
 * Court Utilization
-* Booking Source Statistics
 * Peak Booking Hours
+* Most Booked Court
+* Financial Summary
+* Promotion Performance (Future)
 
 ---
 
@@ -410,13 +465,14 @@ Generate reports such as:
 
 * Booking Management
 * Court Management
+* Business Management
 * User Management
 
 ---
 
 ## Implementation Priority
 
-Low
+Medium
 
 ---
 
@@ -427,19 +483,19 @@ Authentication
         │
         ▼
 User Management
-        │
-        ▼
-Booking Management
+
+Business Management
         │
         ▼
 Court Management
-
+        │
+        ▼
 Booking Management
         │
         ▼
 Reporting
 
-Content Management
+Business Management
         │
         ▼
 Landing Page
@@ -447,37 +503,37 @@ Landing Page
 
 Every domain has a clear responsibility.
 
-Avoid placing logic into unrelated domains.
+Business logic should never be duplicated across domains.
 
 ---
 
 # Business Ownership
 
-| Domain             | Owns                      |
-| ------------------ | ------------------------- |
-| Authentication     | User Authentication       |
-| Booking Management | Booking, Payment, Pricing |
-| Court Management   | Court Operations          |
-| Content Management | Landing Page Content      |
-| User Management    | Customer Profile          |
-| Reporting          | Business Analytics        |
+| Domain              | Owns                            |
+| ------------------- | ------------------------------- |
+| Authentication      | User Authentication             |
+| Booking Management  | Booking, Payment, Court Pricing |
+| Court Management    | Court Operations                |
+| Business Management | Business Information            |
+| User Management     | Customer Profile                |
+| Reporting           | Business Analytics              |
 
 ---
 
 # Version 1 Scope
 
-Included:
+The first version of Courta includes:
 
 * Authentication
+* Business Management
 * Court Management
 * Booking Management
-* Content Management
 * User Management
 * Reporting
 
 Only these domains should be implemented.
 
-Do not introduce additional domains without updating this document.
+New domains should not be introduced without updating this document.
 
 ---
 
@@ -486,11 +542,13 @@ Do not introduce additional domains without updating this document.
 When generating code:
 
 * Respect domain boundaries.
-* Never mix responsibilities between domains.
+* Never mix responsibilities across domains.
 * Reuse existing entities whenever possible.
 * Do not duplicate business logic.
-* Do not introduce new domains without approval.
-* Follow this document before designing the database.
-* Database design must originate from the entities defined here.
+* Database design must originate from this document.
+* Follow the defined domain architecture before implementing new features.
+* Courta is designed for a **single sports center**, not a marketplace.
+* Do not introduce multi-business, multi-venue, or marketplace concepts unless explicitly requested.
+* Keep the architecture modular to support future expansion without affecting the current business scope.
 
-This document serves as the business architecture reference for the entire project.
+This document serves as the primary business architecture reference for the entire project.

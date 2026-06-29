@@ -2,27 +2,37 @@
 
 # Business Rules
 
-This document defines the business logic and operational rules for the Sports Center Management System.
+This document defines the business logic and operational rules for **Courta**, a Sports Center Management System.
 
 All features must follow these rules.
 
-AI should never assume business behavior outside this document.
+Business logic should never be assumed outside this document.
 
 ---
 
 # Core Principle
 
-This application is a **Sports Center Management System**, not just an online booking website.
+Courta is a **Sports Center Management System**, not just an online court booking website.
 
-The website is only one booking channel.
+The website is one of the booking channels used by customers, while the system itself manages the complete business operations of a single sports center.
 
-The management system must represent the real operational workflow inside the sports center.
+All business processes should reflect real operational workflows.
+
+---
+
+# Business Scope
+
+Version 1 focuses on managing **one sports center**.
+
+The system is not designed as a marketplace or a multi-business platform.
+
+Future expansion is possible, but the current business model assumes a single sports center managed by one Owner.
 
 ---
 
 # Booking Channels
 
-Bookings can originate from multiple sources.
+Bookings may originate from multiple channels.
 
 Supported booking sources:
 
@@ -31,45 +41,52 @@ Supported booking sources:
 * WhatsApp
 * Phone
 
-Every booking, regardless of its source, must be stored inside the same booking system.
+Every booking, regardless of its source, must be stored in the same booking system.
 
-There must never be separate schedules for online and offline bookings.
+Separate schedules for online and offline bookings are not allowed.
 
 ---
 
 # Single Source of Truth
 
-The Booking table is the only source of truth.
+The `bookings` table is the only source of truth for booking information.
 
-Landing Page availability, Admin Dashboard, Reports, and Customer Booking History must all use the same booking data.
+The following features must always use booking data from the same source:
 
-Do not generate separate availability systems.
+* Landing Page Availability
+* Admin Dashboard
+* Owner Dashboard
+* Reports
+* Customer Booking History
+
+Availability must never be generated using a separate scheduling system.
 
 ---
 
 # Court Availability
 
+Court availability is calculated dynamically.
+
 A court is considered unavailable when:
 
-* there is an existing confirmed booking
-* there is an existing manual booking
-* the selected time overlaps another booking
+* There is an active booking during the selected time.
+* The requested booking period overlaps another active booking.
 
-Available schedules shown on the landing page must always reflect the latest booking data.
+Completed, cancelled, or expired bookings do not block court availability.
 
 ---
 
 # Manual Booking
 
-Admin can create bookings manually.
+Admins may create bookings manually.
 
-Manual booking is intended for:
+Manual bookings are intended for:
 
 * Walk-in customers
 * WhatsApp reservations
 * Phone reservations
 
-Manual booking should require:
+Manual bookings require:
 
 * Customer Name
 * Phone Number
@@ -79,15 +96,24 @@ Manual booking should require:
 * End Time
 * Booking Source
 
+Optional:
+
+* Booking Notes
+
 ---
 
 # Online Booking
 
-Customers can create bookings only after authentication.
+Customers must authenticate before creating a booking.
 
 Booking flow:
 
+```text
 Login
+
+↓
+
+Select Sport
 
 ↓
 
@@ -103,7 +129,15 @@ Select Time
 
 ↓
 
-Booking Created
+Review Booking Summary
+
+↓
+
+Create Booking
+
+↓
+
+QRIS Payment
 
 ↓
 
@@ -111,73 +145,103 @@ Upload Payment Proof
 
 ↓
 
-Waiting Verification
-
-↓
-
 Admin Verification
 
 ↓
 
-Confirmed
+Booking Confirmed
+```
+
+---
+
+# Booking Expiration
+
+Every newly created booking has a payment deadline of **10 minutes**.
+
+If payment is not verified before the deadline:
+
+* Booking status becomes **EXPIRED**
+* Reserved court becomes available again
+* The booking cannot continue
 
 ---
 
 # Payment Verification
 
-Version 1 uses manual bank transfer.
+Version 1 uses manual QRIS payment.
 
-Customers upload payment proof.
+Customers upload payment proof after completing payment.
 
-Payment proof alone does NOT confirm payment.
+Uploading payment proof does **not** automatically confirm payment.
 
-Admin must verify the payment manually before confirming the booking.
+An Admin must manually verify the payment before confirming the booking.
+
+---
+
+# Pricing Rules
+
+Court pricing may vary depending on:
+
+* Day
+* Operating hours
+
+Weekend pricing may differ from weekday pricing.
+
+Promotional pricing must not modify the original pricing rules.
+
+Price calculations are determined during the booking process.
 
 ---
 
 # Booking Status
 
-Every booking must have one status.
+Each booking must have exactly one status.
 
 Allowed statuses:
 
-Pending Payment
+* WAITING_PAYMENT
+* CONFIRMED
+* COMPLETED
+* CANCELLED
+* EXPIRED
 
-Waiting Verification
+No additional booking statuses should be introduced without updating this document.
 
-Confirmed
+---
 
-Completed
+# Payment Status
 
-Cancelled
+Each payment must have exactly one status.
 
-Avoid introducing additional statuses unless requested.
+Allowed statuses:
+
+* PENDING
+* PAID
+* FAILED
+* REFUNDED
 
 ---
 
 # Booking Source
 
-Each booking must store its origin.
+Each booking stores its origin.
 
 Allowed values:
 
-Website
+* Website
+* Walk-in
+* WhatsApp
+* Phone
 
-Walk-in
-
-WhatsApp
-
-Phone
-
-This information is used for reporting and analytics.
+Booking source is used for reporting and business analytics.
 
 ---
 
 # Double Booking Prevention
 
-The system must never allow two bookings that overlap on the same court.
+The system must never allow overlapping bookings for the same court.
 
-Validation must happen on the backend.
+Validation must always occur on the backend.
 
 Frontend validation alone is not sufficient.
 
@@ -189,62 +253,80 @@ Customers can:
 
 * Register
 * Login
-* View schedules
+* View courts
+* View availability
 * Create bookings
 * Upload payment proof
 * View booking history
 * Update profile
+* Submit optional reviews
 
 Customers cannot:
 
-* Confirm payment
-* Edit other bookings
-* Access admin pages
+* Verify payments
+* Access dashboards
+* Edit other users' bookings
 
 ---
 
 # Admin Rules
 
-Admin can:
+Admins can:
 
-* Manage courts
+* Manage bookings
 * Create manual bookings
-* Edit bookings
-* Cancel bookings
 * Verify payments
-* Manage landing page content
-* View reports
+* Cancel bookings
+* Manage courts
+* Manage promotions
+* Manage galleries
+* Manage facilities
+* Manage FAQs
 * Manage customers
+* Manage website content
 
-Admin cannot:
+Admins cannot:
 
-* Bypass booking validation
+* Override booking validation
 * Create overlapping bookings
+* Access owner-only business reports
 
 ---
 
-# Schedule Management
+# Owner Rules
 
-Schedule availability must always be generated from booking data.
+The Owner has full access to the system.
 
-Never hardcode available time slots.
+Owners can:
 
-The system must calculate availability dynamically.
+* Access the business dashboard
+* View financial reports
+* View business analytics
+* Manage business settings
+* Manage administrator accounts
+* Manage courts
+* Manage pricing
+* Manage promotions
+* Manage operating hours
+* Manage facilities
+* View customer statistics
+* Monitor business performance
 
 ---
 
 # Landing Page Rules
 
-Visitors can:
+Visitors may:
 
-* View courts
+* View available courts
 * View facilities
 * View gallery
-* View available schedules
+* View promotions
+* View business information
 
 Visitors cannot:
 
-* Book courts
+* Create bookings
 * Upload payment proof
 * Access dashboards
 
@@ -257,33 +339,51 @@ Booking requires authentication.
 Reports should include:
 
 * Total Bookings
+* Booking Trends
 * Booking by Date
 * Booking by Court
 * Booking by Source
 * Booking Status
+* Revenue
+* Court Utilization
+* Peak Booking Hours
+* Most Booked Court
 
-Example booking sources:
+Reports always use transactional data.
 
-Website
+---
 
-Walk-in
+# Owner Dashboard
 
-WhatsApp
+The Owner Dashboard is designed for monitoring business performance.
 
-Phone
+It provides information such as:
+
+* Today's Revenue
+* Monthly Revenue
+* Total Bookings
+* Court Utilization
+* Peak Booking Hours
+* Most Booked Court
+* Recent Bookings
+* Recent Payments
+* Customer Statistics
+
+Dashboard analytics must always originate from booking and payment records.
 
 ---
 
 # Data Consistency
 
-Every booking created by any source must:
+Every booking, regardless of its source, must:
 
 * Block the selected schedule
-* Appear in the admin dashboard
-* Affect landing page availability
+* Appear in the Admin Dashboard
+* Appear in the Owner Dashboard
+* Affect court availability
 * Be included in reports
 
-There should never be hidden bookings.
+Hidden bookings are not allowed.
 
 ---
 
@@ -291,11 +391,16 @@ There should never be hidden bookings.
 
 The architecture should remain modular.
 
-Future features may be added without changing the core booking workflow.
+Future enhancements such as:
 
-However, Version 1 should focus only on the rules defined in this document.
+* Payment Gateway
+* Membership
+* Tournament Management
+* Inventory Management
+* Equipment Rental
+* Point of Sale (POS)
 
-Do not generate speculative features.
+may be added without changing the core booking workflow.
 
 ---
 
@@ -304,10 +409,11 @@ Do not generate speculative features.
 When implementing features:
 
 * Always follow this document.
-* Never invent new booking rules.
-* Never invent new booking statuses.
+* Never invent new business rules.
+* Never invent unsupported booking statuses.
 * Never introduce unsupported booking sources.
-* Do not assume business logic.
-* Ask for clarification if a rule is missing.
+* Never introduce marketplace or multi-business concepts.
+* Reuse existing business entities whenever possible.
+* Ask for clarification whenever business rules are incomplete.
 
-This document is the primary reference for all business logic.
+This document serves as the primary business logic reference for the entire project.

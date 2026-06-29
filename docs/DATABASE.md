@@ -4,9 +4,11 @@
 
 ## Overview
 
-This document describes the database design of **Courta**, a sports court booking platform that currently supports **Futsal** and **Volleyball**.
+This document describes the database architecture of **Courta**, a **Sports Center Management System** designed for managing a single sports center.
 
-The purpose of this document is to define the database architecture, business rules, relationships between entities, and design decisions that serve as the foundation for implementation. Detailed table structures, data types, and migrations will be documented separately.
+The database supports business operations including online court bookings, payment management, business information, content management, and business analytics.
+
+This document focuses on database architecture, business rules, relationships between entities, and design decisions. Detailed table structures, column definitions, and migrations will be documented separately.
 
 ---
 
@@ -18,34 +20,36 @@ The Courta database is designed to:
 * Eliminate unnecessary data duplication.
 * Support efficient database queries.
 * Be scalable and maintainable.
-* Provide a solid foundation for future business growth.
+* Preserve transaction history.
+* Support future business growth.
 
 ---
 
 # Design Principles
 
-The database follows the principles below:
+The database follows these principles:
 
 * Normalize data up to at least Third Normal Form (3NF).
 * Use Foreign Keys to maintain referential integrity.
-* Avoid storing values that can be calculated.
 * Separate master data from transactional data.
-* Apply soft deletes only where appropriate.
-* Preserve transaction history even when master data changes.
+* Preserve historical transactions using snapshots.
+* Avoid storing values that can be calculated.
+* Keep business rules independent from presentation logic.
 
 ---
 
 # Core Entities
 
-The primary entities in the Courta database are:
+The primary entities are:
 
 * Users
+* Business Settings
 * Sports
-* Venues
 * Courts
 * Court Prices
 * Promotions
 * Facilities
+* Operating Hours
 * Galleries
 * Bookings
 * Payments
@@ -63,9 +67,10 @@ All database tables use **snake_case**.
 Examples:
 
 * users
-* venues
+* courts
 * court_prices
-* booking_reviews
+* operating_hours
+* business_settings
 
 ---
 
@@ -79,12 +84,13 @@ Every table uses:
 
 ## Foreign Keys
 
-Foreign keys follow this format:
+Foreign Keys follow this convention:
 
 * user_id
-* venue_id
 * court_id
 * booking_id
+* promotion_id
+* sport_id
 
 ---
 
@@ -103,29 +109,29 @@ Tables using soft deletes also include:
 
 # Supported Sports
 
-Currently, Courta supports two sports:
+Currently, Courta supports:
 
 * Futsal
 * Volleyball
 
-Sports are stored in the `sports` table so additional sports can be added in the future without changing the database structure.
+Sports are stored in the `sports` table so additional sports can be added without changing the overall database structure.
 
 ---
 
 # User Roles
 
-The system provides three user roles.
+The application provides three user roles.
 
 ## Customer
 
 Customers can:
 
 * Register and log in.
-* Browse venues.
-* Book courts.
+* Browse available courts.
+* Create bookings.
 * Upload payment proof.
 * View booking history.
-* Leave an optional review.
+* Leave optional reviews.
 
 ---
 
@@ -140,65 +146,64 @@ Admins can:
 * Manage customers.
 * Moderate reviews.
 * Manage website content.
-* Manage banners.
+* Manage gallery.
+* Manage facilities.
 * Manage FAQs.
-* Manage galleries.
-* Update other website information.
+* Manage promotions.
 
-Admins cannot access owner-specific settings.
+Admins cannot modify owner-specific settings.
 
 ---
 
 ## Owner
 
-Owners have full business management access.
+The Owner has full access to the business.
 
 Owners can:
 
 * Access the business dashboard.
 * View financial reports.
-* Manage venues.
+* Manage business settings.
 * Manage courts.
 * Manage pricing.
 * Manage promotions.
 * Manage facilities.
 * Manage operating hours.
-* Manage admin accounts.
-* Configure venue settings.
+* Manage administrator accounts.
+* Configure system settings.
 
 ---
 
 # Business Rules
 
-## Venue Ownership
+## Business Structure
 
-* One Owner can own only one Venue.
-* One Venue belongs to only one Owner.
-* One Venue can have multiple Courts.
+Courta manages a **single sports center**.
+
+Only one Business Settings record exists in the system.
+
+The Owner manages the entire business.
 
 Relationship:
 
-Owner
-
-└── Venue
-
-      ├── Courts
-
-      ├── Gallery
-
-      ├── Facilities
-
-      ├── Bookings
-
-      └── Reviews
+```text
+Business Settings
+│
+├── Courts
+├── Operating Hours
+├── Gallery
+├── Facilities
+├── Promotions
+└── Bookings
+```
 
 ---
 
 ## Courts
 
-A Court represents a bookable sports field.
+A Court represents a sports field that can be booked.
 
-A Venue may contain multiple Courts, including different sports.
+The sports center may contain multiple courts.
 
 Examples:
 
@@ -207,13 +212,15 @@ Examples:
 * Indoor Volleyball Court
 * Outdoor Volleyball Court
 
+Each court belongs to exactly one sport.
+
 ---
 
 # Booking System
 
-Bookings use a **flexible time range** instead of fixed time slots.
+Bookings use a **flexible time range** instead of predefined booking slots.
 
-Each booking consists of:
+Each booking stores:
 
 * Booking Date
 * Start Time
@@ -225,23 +232,23 @@ Example use cases:
 
 * Casual games
 * Friendly matches
-* Futsal coaching sessions
+* Coaching sessions
 * Small tournaments
 * Community training
 
-Booking duration is calculated using the start and end time, so a dedicated duration field is unnecessary.
+Booking duration is calculated automatically from the selected time range.
 
 ---
 
 # Court Availability
 
-Courta does not use predefined booking slots.
+Courta does not generate booking slots.
 
-Court availability is calculated dynamically based on existing bookings.
+Court availability is calculated dynamically using existing bookings.
 
-A court cannot have two bookings that overlap during the same time period.
+A court cannot have overlapping bookings during the same time period.
 
-This approach keeps the database simple, flexible, and scalable.
+This approach keeps the database lightweight and flexible.
 
 ---
 
@@ -249,11 +256,11 @@ This approach keeps the database simple, flexible, and scalable.
 
 Each booking has a payment deadline of **10 minutes** after creation.
 
-If payment is not completed within that period:
+If payment is not completed:
 
-* The booking status becomes **EXPIRED**.
-* The court becomes available again.
-* The booking can no longer be continued.
+* Booking status becomes **EXPIRED**.
+* The reserved court becomes available again.
+* The booking cannot continue.
 
 ---
 
@@ -261,7 +268,7 @@ If payment is not completed within that period:
 
 Regular pricing is stored separately from promotional pricing.
 
-Owners can define pricing based on:
+Pricing rules may vary based on:
 
 * Day
 * Operating hours
@@ -272,9 +279,9 @@ Examples:
 * Weekend
 * Morning
 * Afternoon
-* Night
+* Evening
 
-This allows each court to have multiple pricing rules.
+Each court may have multiple pricing rules.
 
 ---
 
@@ -284,44 +291,49 @@ Promotions are managed independently from regular pricing.
 
 Each promotion contains:
 
-* Promotion name
-* Promotion type
-* Promotion value
-* Active period
+* Promotion Name
+* Promotion Type
+* Promotion Value
+* Active Period
 * Status
 
-Promotions **do not modify the regular price**.
+A promotion may be applied to one or multiple courts.
 
-Instead, they only affect the calculated booking price during the booking process.
+Promotions never modify the original court price.
+
+Instead, promotions affect only the booking calculation.
 
 ---
 
 # Price Snapshot
 
-When a booking is successfully created, the system stores a snapshot of the applicable price.
+When a booking is successfully created, the system stores a snapshot of:
 
-This ensures future price changes do not affect historical transactions.
+* Court Name
+* Applied Price
+* Applied Promotion
+* Total Amount
 
-All bookings permanently retain the price that was valid when the booking was made.
+This ensures historical transactions remain accurate even when pricing changes in the future.
 
 ---
 
 # Payment
 
-Courta currently uses manual payments through QRIS.
+Courta currently uses manual payment through QRIS.
 
 Payment flow:
 
 1. Customer creates a booking.
-2. The system displays the QRIS code.
-3. The customer completes the payment.
-4. The customer uploads the payment proof.
-5. An Admin verifies the payment.
-6. The booking is confirmed.
+2. QRIS is displayed.
+3. Customer completes payment.
+4. Customer uploads payment proof.
+5. Admin verifies payment.
+6. Booking becomes confirmed.
 
-Each booking has exactly one payment record.
+Each booking has exactly one payment.
 
-The payment architecture is designed to support Payment Gateway integration in the future without requiring major database changes.
+The payment architecture is designed for future Payment Gateway integration.
 
 ---
 
@@ -331,35 +343,33 @@ Reviews are optional.
 
 Customers may:
 
-* Give a rating.
-* Write a review.
+* Give ratings.
+* Write reviews.
 * Skip the review process.
 
-Only customers who have completed a booking are allowed to submit reviews.
+Only customers who have completed bookings may submit reviews.
 
 ---
 
 # Gallery
 
-Galleries belong to Venues.
+Gallery belongs to the sports center.
 
-Owners may upload photos such as:
+Gallery may contain:
 
-* Courts
-* Playing area
-* Prayer room
-* Cafeteria
-* Parking area
+* Court photos
+* Facilities
 * Events
 * Tournaments
+* Business activities
 
-Galleries are not attached to individual Courts.
+Gallery is not attached to individual courts.
 
 ---
 
 # Facilities
 
-Facilities use master data.
+Facilities are managed using master data.
 
 Examples:
 
@@ -370,17 +380,15 @@ Examples:
 * Cafeteria
 * Changing Room
 
-Owners simply select the available facilities for their venue.
-
-This approach keeps the data consistent.
+The Owner selects the facilities available in the sports center.
 
 ---
 
 # Operating Hours
 
-Operating hours may vary by day.
+Operating hours represent the business schedule of the sports center.
 
-Each day stores its own opening and closing time.
+Each day may have different opening and closing hours.
 
 ---
 
@@ -388,7 +396,6 @@ Each day stores its own opening and closing time.
 
 ## Booking Status
 
-* PENDING
 * WAITING_PAYMENT
 * CONFIRMED
 * COMPLETED
@@ -406,24 +413,25 @@ Each day stores its own opening and closing time.
 
 ---
 
-## Venue Status
+## Court Status
 
-* ACTIVE
-* INACTIVE
+* AVAILABLE
+* UNAVAILABLE
+* MAINTENANCE
 
 ---
 
 # Notifications
 
-The database stores notifications for all system users.
+The database stores notifications for all users.
 
 Examples:
 
-* Booking confirmed.
-* Booking cancelled.
-* Payment received.
-* New promotion available.
-* System announcement.
+* Booking confirmed
+* Booking cancelled
+* Payment verified
+* Promotion published
+* System announcement
 
 ---
 
@@ -432,50 +440,56 @@ Examples:
 Soft Deletes are applied to:
 
 * Users
-* Venues
 * Courts
 * Galleries
 * Reviews
+* Promotions
 
-Soft Deletes are **not** applied to:
+Soft Deletes are not applied to:
 
 * Bookings
 * Payments
 
-Transactional records are permanently preserved as part of the system history.
+Transaction history must always be preserved.
 
 ---
 
 # Index Strategy
 
-Several columns will be indexed to improve query performance.
+Indexes are applied to improve query performance.
 
 Examples:
 
 * email
 * phone
-* venue_id
 * court_id
 * booking_date
 * status
 * payment_status
+* sport_id
 
-Detailed index implementation will be documented in the database schema documentation.
+Detailed index implementation will be documented in `SCHEMA.md`.
 
 ---
 
 # Future Scalability
 
-The database architecture is designed to support future enhancements, including:
+The database architecture is designed to support future expansion without major structural changes.
 
-* Payment Gateway integration
-* Voucher system
-* Membership program
-* Tournament management
-* Dynamic pricing
-* Additional sports
-* Loyalty program
-* Push notifications
-* Advanced financial reporting
+Potential future features include:
 
-These features can be introduced without requiring major changes to the core database architecture.
+* Payment Gateway Integration
+* Membership System
+* Voucher System
+* Tournament Management
+* Dynamic Pricing
+* Equipment Rental
+* Inventory Management
+* Employee Management
+* Attendance System
+* Point of Sale (POS)
+* Loyalty Program
+* Push Notifications
+* Advanced Financial Reports
+
+The current architecture focuses on a **single sports center**, while remaining modular enough to support future enhancements.
