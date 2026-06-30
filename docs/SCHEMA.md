@@ -296,3 +296,233 @@ Primary Key
 * day_type
 * start_time
 * end_time
+
+---
+
+## Table: promotions
+
+### Columns
+
+| Column         | Type                       | Nullable | Default           | Description                   |
+| -------------- | -------------------------- | -------- | ----------------- | ----------------------------- |
+| id             | BIGINT UNSIGNED            | No       | AUTO_INCREMENT    | Primary Key                   |
+| name           | VARCHAR(100)               | No       | -                 | Promotion name                |
+| discount_type  | ENUM('PERCENTAGE','FIXED') | No       | -                 | Discount type                 |
+| discount_value | DECIMAL(12,2)              | No       | 0.00              | Discount amount or percentage |
+| start_date     | DATE                       | No       | -                 | Promotion start date          |
+| end_date       | DATE                       | No       | -                 | Promotion end date            |
+| created_at     | TIMESTAMP                  | No       | CURRENT_TIMESTAMP | Record creation time          |
+| updated_at     | TIMESTAMP                  | No       | CURRENT_TIMESTAMP | Last update time              |
+
+### Constraints
+
+Primary Key
+
+* id
+
+### Foreign Keys
+
+None
+
+### Indexes
+
+* start_date
+* end_date
+
+---
+
+## Table: promotion_courts
+
+### Columns
+
+| Column       | Type            | Nullable | Default        | Description       |
+| ------------ | --------------- | -------- | -------------- | ----------------- |
+| id           | BIGINT UNSIGNED | No       | AUTO_INCREMENT | Primary Key       |
+| promotion_id | BIGINT UNSIGNED | No       | -              | Related promotion |
+| court_id     | BIGINT UNSIGNED | No       | -              | Related court     |
+
+### Constraints
+
+Primary Key
+
+* id
+
+Unique
+
+* promotion_id + court_id
+
+### Foreign Keys
+
+* promotion_id → promotions.id
+* court_id → courts.id
+
+### Indexes
+
+* promotion_id
+* court_id
+
+---
+
+## Table: business_settings
+
+### Columns
+
+| Column          | Type            | Nullable | Default           | Description                  |
+| --------------- | --------------- | -------- | ----------------- | ---------------------------- |
+| id              | BIGINT UNSIGNED | No       | AUTO_INCREMENT    | Primary Key                  |
+| business_name   | VARCHAR(100)    | No       | -                 | Sports center name           |
+| description     | TEXT            | Yes      | NULL              | Business description         |
+| address         | TEXT            | No       | -                 | Business address             |
+| phone           | VARCHAR(20)     | No       | -                 | Business phone number        |
+| whatsapp        | VARCHAR(20)     | No       | -                 | WhatsApp number              |
+| email           | VARCHAR(255)    | Yes      | NULL              | Business email               |
+| google_maps_url | VARCHAR(255)    | Yes      | NULL              | Google Maps link             |
+| logo            | VARCHAR(255)    | Yes      | NULL              | Logo path                    |
+| hero_image      | VARCHAR(255)    | Yes      | NULL              | Hero banner path             |
+| qris_image      | VARCHAR(255)    | No       | -                 | QRIS image path              |
+| booking_terms   | TEXT            | Yes      | NULL              | Booking terms and conditions |
+| timezone        | VARCHAR(50)     | No       | Asia/Jakarta      | Business timezone            |
+| created_at      | TIMESTAMP       | No       | CURRENT_TIMESTAMP | Record creation time         |
+| updated_at      | TIMESTAMP       | No       | CURRENT_TIMESTAMP | Last update time             |
+
+### Constraints
+
+Primary Key
+
+* id
+
+### Foreign Keys
+
+None
+
+### Indexes
+
+None
+
+---
+
+## Table: operating_hours
+
+### Columns
+
+| Column     | Type                                                                         | Nullable | Default           | Description            |
+| ---------- | ---------------------------------------------------------------------------- | -------- | ----------------- | ---------------------- |
+| id         | BIGINT UNSIGNED                                                              | No       | AUTO_INCREMENT    | Primary Key            |
+| day        | ENUM('MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY') | No       | -                 | Day of the week        |
+| open_time  | TIME                                                                         | Yes      | NULL              | Opening time           |
+| close_time | TIME                                                                         | Yes      | NULL              | Closing time           |
+| is_closed  | BOOLEAN                                                                      | No       | FALSE             | Business closed status |
+| created_at | TIMESTAMP                                                                    | No       | CURRENT_TIMESTAMP | Record creation time   |
+| updated_at | TIMESTAMP                                                                    | No       | CURRENT_TIMESTAMP | Last update time       |
+
+### Constraints
+
+Primary Key
+
+* id
+
+Unique
+
+* day
+
+### Foreign Keys
+
+None
+
+### Indexes
+
+* day
+
+---
+
+## Table: business_holidays
+
+### Columns
+
+| Column       | Type            | Nullable | Default           | Description            |
+| ------------ | --------------- | -------- | ----------------- | ---------------------- |
+| id           | BIGINT UNSIGNED | No       | AUTO_INCREMENT    | Primary Key            |
+| holiday_date | DATE            | No       | -                 | Closed date            |
+| title        | VARCHAR(100)    | No       | -                 | Holiday title          |
+| description  | TEXT            | Yes      | NULL              | Additional information |
+| created_at   | TIMESTAMP       | No       | CURRENT_TIMESTAMP | Record creation time   |
+| updated_at   | TIMESTAMP       | No       | CURRENT_TIMESTAMP | Last update time       |
+
+### Constraints
+
+Primary Key
+
+* id
+
+Unique
+
+* holiday_date
+
+### Foreign Keys
+
+None
+
+### Indexes
+
+* holiday_date
+
+---
+
+## Table: facilities
+
+### Columns
+
+| Column        | Type            | Nullable | Default           | Description          |
+| ------------- | --------------- | -------- | ----------------- | -------------------- |
+| id            | BIGINT UNSIGNED | No       | AUTO_INCREMENT    | Primary Key          |
+| name          | VARCHAR(100)    | No       | -                 | Facility name        |
+| icon          | VARCHAR(255)    | Yes      | NULL              | Facility icon        |
+| description   | TEXT            | Yes      | NULL              | Facility description |
+| display_order | INT UNSIGNED    | No       | 0                 | Display order        |
+| is_active     | BOOLEAN         | No       | TRUE              | Display status       |
+| created_at    | TIMESTAMP       | No       | CURRENT_TIMESTAMP | Record creation time |
+| updated_at    | TIMESTAMP       | No       | CURRENT_TIMESTAMP | Last update time     |
+
+### Constraints
+
+Primary Key
+
+* id
+
+### Foreign Keys
+
+None
+
+### Indexes
+
+* display_order
+
+---
+
+## Table: gallery
+
+### Columns
+
+| Column        | Type            | Nullable | Default           | Description           |
+| ------------- | --------------- | -------- | ----------------- | --------------------- |
+| id            | BIGINT UNSIGNED | No       | AUTO_INCREMENT    | Primary Key           |
+| title         | VARCHAR(100)    | Yes      | NULL              | Image title           |
+| image         | VARCHAR(255)    | No       | -                 | Image path            |
+| display_order | INT UNSIGNED    | No       | 0                 | Display order         |
+| created_at    | TIMESTAMP       | No       | CURRENT_TIMESTAMP | Record creation time  |
+| updated_at    | TIMESTAMP       | No       | CURRENT_TIMESTAMP | Last update time      |
+| deleted_at    | TIMESTAMP       | Yes      | NULL              | Soft delete timestamp |
+
+### Constraints
+
+Primary Key
+
+* id
+
+### Foreign Keys
+
+None
+
+### Indexes
+
+* display_order
