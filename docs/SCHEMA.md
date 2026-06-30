@@ -526,3 +526,167 @@ None
 ### Indexes
 
 * display_order
+
+---
+
+## Table: bookings
+
+### Columns
+
+| Column         | Type                                                                  | Nullable | Default           | Description             |
+| -------------- | --------------------------------------------------------------------- | -------- | ----------------- | ----------------------- |
+| id             | BIGINT UNSIGNED                                                       | No       | AUTO_INCREMENT    | Primary Key             |
+| booking_code   | VARCHAR(20)                                                           | No       | -                 | Unique booking code     |
+| user_id        | BIGINT UNSIGNED                                                       | No       | -                 | Customer                |
+| court_id       | BIGINT UNSIGNED                                                       | No       | -                 | Booked court            |
+| booking_date   | DATE                                                                  | No       | -                 | Booking date            |
+| start_time     | TIME                                                                  | No       | -                 | Booking start time      |
+| end_time       | TIME                                                                  | No       | -                 | Booking end time        |
+| booking_source | ENUM('WEBSITE','WALK_IN','WHATSAPP','PHONE')                          | No       | WEBSITE           | Booking source          |
+| status         | ENUM('WAITING_PAYMENT','CONFIRMED','COMPLETED','CANCELLED','EXPIRED') | No       | WAITING_PAYMENT   | Booking status          |
+| court_name     | VARCHAR(100)                                                          | No       | -                 | Court name snapshot     |
+| sport_name     | VARCHAR(50)                                                           | No       | -                 | Sport name snapshot     |
+| price          | DECIMAL(12,2)                                                         | No       | 0.00              | Price snapshot          |
+| promotion_name | VARCHAR(100)                                                          | Yes      | NULL              | Promotion snapshot      |
+| discount_type  | ENUM('PERCENTAGE','FIXED')                                            | Yes      | NULL              | Discount type snapshot  |
+| discount_value | DECIMAL(12,2)                                                         | Yes      | NULL              | Discount value snapshot |
+| total_price    | DECIMAL(12,2)                                                         | No       | 0.00              | Final booking price     |
+| notes          | TEXT                                                                  | Yes      | NULL              | Optional customer notes |
+| expires_at     | TIMESTAMP                                                             | No       | -                 | Payment deadline        |
+| created_at     | TIMESTAMP                                                             | No       | CURRENT_TIMESTAMP | Record creation time    |
+| updated_at     | TIMESTAMP                                                             | No       | CURRENT_TIMESTAMP | Last update time        |
+
+### Constraints
+
+Primary Key
+
+* id
+
+Unique
+
+* booking_code
+
+### Foreign Keys
+
+* user_id → users.id
+* court_id → courts.id
+
+### Indexes
+
+* booking_code
+* user_id
+* court_id
+* booking_date
+* status
+* booking_source
+
+---
+
+## Table: payments
+
+### Columns
+
+| Column             | Type                                       | Nullable | Default           | Description                |
+| ------------------ | ------------------------------------------ | -------- | ----------------- | -------------------------- |
+| id                 | BIGINT UNSIGNED                            | No       | AUTO_INCREMENT    | Primary Key                |
+| payment_code       | VARCHAR(20)                                | No       | -                 | Unique payment code        |
+| booking_id         | BIGINT UNSIGNED                            | No       | -                 | Related booking            |
+| expected_amount    | DECIMAL(12,2)                              | No       | 0.00              | Expected payment amount    |
+| paid_amount        | DECIMAL(12,2)                              | No       | 0.00              | Amount paid by customer    |
+| payment_proof_path | VARCHAR(255)                               | Yes      | NULL              | Payment proof path         |
+| status             | ENUM('PENDING','PAID','FAILED','REFUNDED') | No       | PENDING           | Payment status             |
+| verified_at        | TIMESTAMP                                  | Yes      | NULL              | Verification time          |
+| verified_by        | BIGINT UNSIGNED                            | Yes      | NULL              | Admin who verified payment |
+| notes              | TEXT                                       | Yes      | NULL              | Verification notes         |
+| created_at         | TIMESTAMP                                  | No       | CURRENT_TIMESTAMP | Record creation time       |
+| updated_at         | TIMESTAMP                                  | No       | CURRENT_TIMESTAMP | Last update time           |
+
+### Constraints
+
+Primary Key
+
+* id
+
+Unique
+
+* payment_code
+* booking_id
+
+### Foreign Keys
+
+* booking_id → bookings.id
+* verified_by → users.id
+
+### Indexes
+
+* payment_code
+* booking_id
+* status
+
+---
+
+## Table: reviews
+
+### Columns
+
+| Column     | Type             | Nullable | Default           | Description           |
+| ---------- | ---------------- | -------- | ----------------- | --------------------- |
+| id         | BIGINT UNSIGNED  | No       | AUTO_INCREMENT    | Primary Key           |
+| booking_id | BIGINT UNSIGNED  | No       | -                 | Related booking       |
+| user_id    | BIGINT UNSIGNED  | No       | -                 | Review author         |
+| rating     | TINYINT UNSIGNED | No       | -                 | Rating (1–5)          |
+| review     | TEXT             | Yes      | NULL              | Review content        |
+| created_at | TIMESTAMP        | No       | CURRENT_TIMESTAMP | Record creation time  |
+| updated_at | TIMESTAMP        | No       | CURRENT_TIMESTAMP | Last update time      |
+| deleted_at | TIMESTAMP        | Yes      | NULL              | Soft delete timestamp |
+
+### Constraints
+
+Primary Key
+
+* id
+
+Unique
+
+* booking_id
+
+### Foreign Keys
+
+* booking_id → bookings.id
+* user_id → users.id
+
+### Indexes
+
+* user_id
+* rating
+
+---
+
+## Table: notifications
+
+### Columns
+
+| Column     | Type            | Nullable | Default           | Description            |
+| ---------- | --------------- | -------- | ----------------- | ---------------------- |
+| id         | BIGINT UNSIGNED | No       | AUTO_INCREMENT    | Primary Key            |
+| user_id    | BIGINT UNSIGNED | No       | -                 | Notification recipient |
+| title      | VARCHAR(100)    | No       | -                 | Notification title     |
+| message    | TEXT            | No       | -                 | Notification message   |
+| is_read    | BOOLEAN         | No       | FALSE             | Read status            |
+| created_at | TIMESTAMP       | No       | CURRENT_TIMESTAMP | Record creation time   |
+| updated_at | TIMESTAMP       | No       | CURRENT_TIMESTAMP | Last update time       |
+
+### Constraints
+
+Primary Key
+
+* id
+
+### Foreign Keys
+
+* user_id → users.id
+
+### Indexes
+
+* user_id
+* is_read
